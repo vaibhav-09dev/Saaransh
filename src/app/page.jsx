@@ -1,105 +1,98 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import {
-Card,
-CardHeader,
-CardTitle,
-CardDescription,
-CardContent,
+  Card,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+  CardContent,
 } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
-import { Progress } from "@/components/ui/progress"
-import { Badge } from "@/components/ui/badge"
-import { Alert, AlertDescription } from "@/components/ui/alert"
-import { FileSpreadsheet, CheckCircle } from "lucide-react"
+import { Button } from "@/components/ui/button.jsx"
+import { FileSpreadsheet, Sun, Moon } from "lucide-react"
 
 export default function Home() {
-const [file, setFile] = useState(null)
-const [comments, setComments] = useState([])
-const [loading, setLoading] = useState(false)
-const [results, setResults] = useState(null)
+  const [file, setFile] = useState(null)
+  const [theme, setTheme] = useState("light")
 
-const handleFileUpload = (e) => {
-const uploadedFile = e.target.files[0]
-if (!uploadedFile) return
-setFile(uploadedFile)
-}
+  // Set theme based on system preference when component mounts
+  useEffect(() => {
+    if (window.matchMedia("(prefers-color-scheme: dark)").matches) {
+      setTheme("dark")
+      document.documentElement.classList.add("dark")
+    }
+  }, [])
 
-const handleAnalyze = async () => {
-setLoading(true)
-// TODO: connect to /api/analyze
-setTimeout(() => {
-setResults({
-overall:
-"Most comments are positive, but clarity is needed on compliance sections.",
-data: [
-{
-text: comments[0],
-sentiment: "Positive",
-summary: "Supportive of simplification",
-},
-{
-text: comments[1],
-sentiment: "Neutral",
-summary: "Requests clarification",
-},
-{
-text: comments[2],
-sentiment: "Negative",
-summary: "Implementation concerns",
-},
-],
-keywords: { compliance: 5, clarity: 3, draft: 2, amendment: 4 },
-})
-setLoading(false)
-}, 2000)
-}
+  const toggleTheme = () => {
+    if (theme === "light") {
+      setTheme("dark")
+      document.documentElement.classList.add("dark")
+    } else {
+      setTheme("light")
+      document.documentElement.classList.remove("dark")
+    }
+  }
 
-return (
-<main className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 p-6">
-<div className="max-w-5xl mx-auto space-y-8">
-{/* Header */}
-<div className="text-center space-y-4">
-<h1 className="text-5xl font-bold text-indigo-700">
-eConsultation AI Feedback Analyzer
-</h1>
-<p className="text-slate-600 text-lg">
-Upload stakeholder feedback files and let AI handle sentiment
-analysis, summaries, and keyword insights.
-</p>
-</div>
+  const handleFileUpload = (e) => {
+    const uploadedFile = e.target.files?.[0]
+    if (!uploadedFile) return
+    setFile(uploadedFile)
+  }
 
-    {/* Upload Card */}
-    <Card>
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <FileSpreadsheet className="h-5 w-5 text-indigo-600" />
-          Upload Feedback File
-        </CardTitle>
-        <CardDescription>
-          Accepts Excel or CSV with stakeholder comments
-        </CardDescription>
-      </CardHeader>
-      <CardContent>
-        <input
-          type="file"
-          accept=".csv,.xlsx,.xls"
-          onChange={handleFileUpload}
-          className="mb-4 bg-amber-400 hover:bg-amber-500 text-white px-4 py-2 rounded cursor-pointer"
-        />
-        {file && (
-          <div className="text-sm text-slate-700">
-            <strong>File:</strong> {file.name}
-          </div>
-        )}
-      </CardContent>
-    </Card>
+  return (
+    <main className="min-h-screen bg-background text-foreground p-6 transition-colors duration-500">
+      <div className="max-w-5xl mx-auto space-y-8">
+        {/* Header */}
+        <div className="relative text-center space-y-4">
+          {/* Theme Switch Button */}
+          <Button
+            onClick={toggleTheme}
+            variant="outline"
+            size="icon"
+            className="absolute top-0 right-0"
+          >
+            {theme === "light" ? (
+              <Moon className="h-5 w-5" />
+            ) : (
+              <Sun className="h-5 w-5" />
+            )}
+          </Button>
 
-  
-  </div>
-</main>
+          <h1 className="text-5xl font-bold text-primary transition-colors">
+            eConsultation AI Feedback Analyzer
+          </h1>
+          <p className="text-muted-foreground text-lg flex justify-center">
+            Upload stakeholder feedback files and let AI handle sentiment
+            analysis, summaries, and keyword insights.
+          </p>
+        </div>
 
-
-)
+        {/* Upload Card */}
+        <Card className="transition-colors">
+          <CardHeader>
+            <CardTitle className="flex items-center justify-center gap-2 text-2xl">
+              <FileSpreadsheet className="h-5 w-5 text-primary" />
+              Upload Feedback File
+            </CardTitle>
+            <CardDescription className="flex justify-center">
+              Accepts Excel or CSV with stakeholder comments
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="flex flex-col items-center">
+            <input
+              type="file"
+              accept=".csv,.xlsx,.xls"
+              onChange={handleFileUpload}
+              className="my-5 bg-amber-500 hover:bg-amber-600 text-white px-4 py-2 hover:my-4 hover:py-3 cursor-pointer transition-all duration-300 ease-in-out rounded-md"
+            />
+            {file && (
+              <div className="text-sm text-muted-foreground">
+                <strong>File:</strong> {file.name}
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      </div>
+    </main>
+  )
 }
