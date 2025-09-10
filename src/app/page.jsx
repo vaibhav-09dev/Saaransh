@@ -9,13 +9,14 @@ import {
   CardContent,
 } from "@/components/ui/card"
 import { Button } from "@/components/ui/button.jsx"
-import { FileSpreadsheet, Sun, Moon } from "lucide-react"
+import { FileSpreadsheet, Sun, Moon, Upload } from "lucide-react"
 
 export default function Home() {
   const [file, setFile] = useState(null)
   const [theme, setTheme] = useState("light")
+  const [dragActive, setDragActive] = useState(false)
 
-  // Set theme based on system preference when component mounts
+  // Set theme based on system preference
   useEffect(() => {
     if (window.matchMedia("(prefers-color-scheme: dark)").matches) {
       setTheme("dark")
@@ -37,6 +38,26 @@ export default function Home() {
     const uploadedFile = e.target.files?.[0]
     if (!uploadedFile) return
     setFile(uploadedFile)
+  }
+
+  // Drag events
+  const handleDrag = (e) => {
+    e.preventDefault()
+    e.stopPropagation()
+    if (e.type === "dragenter" || e.type === "dragover") {
+      setDragActive(true)
+    } else if (e.type === "dragleave") {
+      setDragActive(false)
+    }
+  }
+
+  const handleDrop = (e) => {
+    e.preventDefault()
+    e.stopPropagation()
+    setDragActive(false)
+    if (e.dataTransfer.files && e.dataTransfer.files[0]) {
+      handleFileUpload({ target: { files: e.dataTransfer.files } })
+    }
   }
 
   return (
@@ -78,16 +99,46 @@ export default function Home() {
               Accepts Excel or CSV with stakeholder comments
             </CardDescription>
           </CardHeader>
-          <CardContent className="flex flex-col items-center">
+
+          <CardContent className="flex flex-col items-center w-full">
+            {/* Hidden input */}
             <input
               type="file"
               accept=".csv,.xlsx,.xls"
+              id="file-upload"
               onChange={handleFileUpload}
-              className="my-5 bg-amber-500 hover:bg-amber-600 text-white px-4 py-2 hover:my-4 hover:py-3 cursor-pointer transition-all duration-300 ease-in-out rounded-md"
+              className="hidden"
             />
+
+            {/* Drop zone */}
+            <label
+              htmlFor="file-upload"
+              onDragEnter={handleDrag}
+              onDragOver={handleDrag}
+              onDragLeave={handleDrag}
+              onDrop={handleDrop}
+              className={`flex flex-col items-center justify-center w-full max-w-xl px-6 py-12 border-2 border-dashed rounded-2xl cursor-pointer transition-all ${
+                dragActive
+                  ? "border-amber-500 bg-amber-50 dark:bg-amber-900/30"
+                  : "border-muted-foreground/40 hover:border-amber-500"
+              }`}
+            >
+              <Upload className="h-10 w-10 text-amber-500 mb-3" />
+              <p className="text-lg font-medium text-foreground">
+                Drag & drop your file here
+              </p>
+              <p className="text-sm text-muted-foreground">
+                or{" "}
+                <span className="text-amber-600 font-semibold">
+                  click to upload
+                </span>
+              </p>
+            </label>
+
+            {/* Show file */}
             {file && (
-              <div className="text-sm text-muted-foreground">
-                <strong>File:</strong> {file.name}
+              <div className="mt-4 text-sm text-muted-foreground">
+                <strong>Selected:</strong> {file.name}
               </div>
             )}
           </CardContent>
