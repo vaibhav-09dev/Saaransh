@@ -10,9 +10,11 @@ import {
 } from "@/components/ui/card"
 import { Button } from "@/components/ui/button.jsx"
 import { FileSpreadsheet, Sun, Moon, Upload } from "lucide-react"
+import * as XLSX from "xlsx"
 
 export default function Home() {
   const [file, setFile] = useState(null)
+  const [csvFileName, setCsvFileName] = useState("")
   const [theme, setTheme] = useState("light")
   const [dragActive, setDragActive] = useState(false)
 
@@ -38,6 +40,7 @@ export default function Home() {
     const uploadedFile = e.target.files?.[0]
     if (!uploadedFile) return
     setFile(uploadedFile)
+    convertToCSV(uploadedFile)
   }
 
   // Drag events
@@ -60,12 +63,29 @@ export default function Home() {
     }
   }
 
+  // Convert Excel → CSV (only name shown)
+  const convertToCSV = (uploadedFile) => {
+    const reader = new FileReader()
+    reader.onload = (e) => {
+      const data = new Uint8Array(e.target.result)
+      const workbook = XLSX.read(data, { type: "array" })
+
+      // take the first sheet
+      const worksheet = workbook.Sheets[workbook.SheetNames[0]]
+      XLSX.utils.sheet_to_csv(worksheet) // we just convert, not saving
+
+      // just set CSV filename
+      const csvName = uploadedFile.name.replace(/\.[^/.]+$/, "") + ".csv"
+      setCsvFileName(csvName)
+    }
+    reader.readAsArrayBuffer(uploadedFile)
+  }
+
   return (
     <main className="min-h-screen bg-background text-foreground p-6 transition-colors duration-500">
       <div className="max-w-5xl mx-auto space-y-8">
         {/* Header */}
         <div className="relative text-center space-y-4">
-          {/* Theme Switch Button */}
           <Button
             onClick={toggleTheme}
             variant="outline"
@@ -101,7 +121,6 @@ export default function Home() {
           </CardHeader>
 
           <CardContent className="flex flex-col items-center w-full">
-            {/* Hidden input */}
             <input
               type="file"
               accept=".csv,.xlsx,.xls"
@@ -110,7 +129,6 @@ export default function Home() {
               className="hidden"
             />
 
-            {/* Drop zone */}
             <label
               htmlFor="file-upload"
               onDragEnter={handleDrag}
@@ -135,10 +153,17 @@ export default function Home() {
               </p>
             </label>
 
-            {/* Show file */}
+            {/* Show original + converted file name */}
             {file && (
-              <div className="mt-4 text-sm text-muted-foreground">
-                <strong>Selected:</strong> {file.name}
+              <div className="mt-4 flex flex-col items-center gap-2 text-sm text-muted-foreground">
+                <p>
+                  <strong>Uploaded:</strong> {file.name}
+                </p>
+                {csvFileName && (
+                  <p>
+                    <strong>Converted CSV:</strong> {csvFileName}
+                  </p>
+                )}
               </div>
             )}
           </CardContent>
